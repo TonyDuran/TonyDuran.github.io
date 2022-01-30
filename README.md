@@ -1,2 +1,2 @@
 # TonyDuran.github.io
-Github page site
+Using it to quickly host random content. 
