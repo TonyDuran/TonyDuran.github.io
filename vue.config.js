@@ -1,3 +1,5 @@
 module.exports = {
-    publicPath: '/thought-bin/'
-}
+    publicPath: process.env.NODE_ENV === 'production'
+      ? '/TonyDuran.github.io/'
+      : '/'
+  }
