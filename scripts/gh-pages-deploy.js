@@ -1,5 +1,7 @@
-const execa = require("execa");
-const fs = require("fs");
+import { execa } from "execa";
+import { process } from 'process';
+import * as fs from 'fs';
+
 
   (async () => {
     try {
@@ -13,8 +15,10 @@ const fs = require("fs");
       console.log("Pushing to gh-pages...");
       await execa("git", ["push", "origin", "HEAD:gh-pages", "--force"]);
       await execa("rm", ["-r", folderName]);
-      await execa("git", ["checkout", "-f", "main"]);
+      await execa("git", ["checkout", "-f", "-"]);
       await execa("git", ["branch", "-D", "gh-pages"]);
+
+
       console.log("Successfully deployed");
     } catch (e) {
       console.log(e.message);
