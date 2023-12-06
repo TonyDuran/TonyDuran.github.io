@@ -1,6 +1,6 @@
 import { execa } from "execa";
-import { process } from 'process';
 import * as fs from 'fs';
+import process from 'node:process';
 
 
   (async () => {
@@ -15,7 +15,7 @@ import * as fs from 'fs';
       console.log("Pushing to gh-pages...");
       await execa("git", ["push", "origin", "HEAD:gh-pages", "--force"]);
       await execa("rm", ["-r", folderName]);
-      await execa("git", ["checkout", "-f", "-"]);
+      await execa("git", ["checkout", "-f", "main"]);
       await execa("git", ["branch", "-D", "gh-pages"]);
 
 
