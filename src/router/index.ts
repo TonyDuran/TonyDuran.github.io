@@ -1,9 +1,9 @@
-import { createRouter, createWebHistory } from 'vue-router'
+// import { createRouter, createWebHistory } from 'vue-router'
 // import { Timeline } from './views/TimelineView.vue'
 
-const router = createRouter({
+// const router = createRouter({
   // history: createWebHistory("/TonyDuran.github.io/"),
-  routes: [
+  // routes: [
     // {
     //   path: '/',
     //   name: 'home',
@@ -22,7 +22,7 @@ const router = createRouter({
     //   // which is lazy-loaded when the route is visited.
     //   component: () => import('../views/AboutView.vue')
     // }
-  ]
-})
+  // ]
+// })
 
-export default router
+// export default router
