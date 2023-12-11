@@ -2,17 +2,17 @@ import { createRouter, createWebHistory } from 'vue-router'
 // import { Timeline } from './views/TimelineView.vue'
 
 const router = createRouter({
-  history: createWebHistory("/TonyDuran.github.io/"),
+  // history: createWebHistory("/TonyDuran.github.io/"),
   routes: [
     // {
     //   path: '/',
     //   name: 'home',
-    //   component: 
+    //   component: App
     // },
     // {
     //   path: '/TonyDuran.github.io/',
-    //   name: 'Home',
     //   component: Timeline
+    //   name: 'Home',
     // },
     // {
     //   path: '/about',
