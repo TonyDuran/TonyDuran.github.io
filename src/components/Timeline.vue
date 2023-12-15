@@ -10,7 +10,7 @@ const postsStore = usePosts()
 const selectedPeriod = ref("Today");
 
 //slowing the site just to test <Suspense>
-await postsStore.fetchPosts()
+// await postsStore.fetchPosts()
 
 </script>
 

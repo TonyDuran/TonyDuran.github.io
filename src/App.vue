@@ -5,6 +5,7 @@ import Timeline from "./components/Timeline.vue";
 <template>
   <div class="section">
     <div class="container">
+      <RouterView />
       <Suspense>
         <template #default>
           <Timeline />
