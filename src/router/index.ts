@@ -6,7 +6,6 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
-      //TODO: Move learning app to a separate path & start portfolio layout
       path: '/',
      name: 'home',
       component: Home
