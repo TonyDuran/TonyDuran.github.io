@@ -1,42 +1,37 @@
 <script lang="ts" setup>
 import { type TimelinePost } from '../posts';
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { marked } from "marked";
+import highlightjs from 'highlight.js';
 
-const props = defineProps<{
-  post: TimelinePost
-}>()
+const parsedContent = ref<string>('');
 
-const title = ref(props.post.title);
-const content = ref(props.post.markdown);
-const contentEditable = ref<HTMLDivElement>();
-
-function handleInput() {
-  if (!contentEditable.value){
-    throw Error("contentEditable DOM node was not found");
+onMounted(async () => {
+  try {
+    // Replace 'path/to/your/markdownfile.md' with the actual path
+    const response = await fetch('/markdownfile.md');
+    const markdown = await response.text();
+    const options = {
+      gfm: true,
+      breaks: true,
+      highlight: (code: string) => {
+          return highlightjs.highlightAuto(code).value;
+      }
+    }
+    if (typeof markdown === 'string'){
+      parsedContent.value = await marked.parse(markdown, options );
+    } else {
+      throw new Error('Fetched data is not a string');
+    }
+  } catch (error) {
+    console.error('Error reading markdown file:', error);
   }
-  content.value = contentEditable.value?.innerText
+});
 
-}
 </script>
 <template>
   <div class="columns">
-    <div class="column">
-      <div class="field">
-        <div class="label">Post title</div>
-        <input type="text" class="input" v-model="title">
-      </div>
-    </div>
-  </div>
-
-  <div class="columns">
-    <div class="column">
-      <div contenteditable ref="contentEditable" @input="handleInput">
-        {{ content }}
-      </div>
-
-    </div>
-    <div class="column">
-        {{ content }}
+    <div class="column" v-html="parsedContent">
     </div>
   </div>
 </template>

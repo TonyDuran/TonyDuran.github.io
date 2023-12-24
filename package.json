@@ -15,8 +15,13 @@
     "gh-pages-deploy": "node scripts/gh-pages-deploy.js"
   },
   "dependencies": {
+    "@types/lodash": "^4.14.202",
     "@types/luxon": "^2.3.1",
+    "@types/marked": "^6.0.0",
+    "highlight.js": "^11.9.0",
+    "lodash": "^4.17.21",
     "luxon": "^2.3.1",
+    "marked": "^11.1.0",
     "pinia": "^2.1.7",
     "vue": "^3.3.4",
     "vue-router": "^4.2.5"
