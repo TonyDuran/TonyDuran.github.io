@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <script>
+      //currently, want to limit page navigation to only working endpoints
+      if (!window.location.hash) {
+        window.location.replace(window.location.origin + '/#/');
+      }
+    </script>
   </head>
   <body>
     <div id="app"></div>

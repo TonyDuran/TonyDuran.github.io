@@ -1,4 +1,9 @@
 {
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "lib": ["dom", "esnext"],
+  },
   "files": [],
   "references": [
     {
