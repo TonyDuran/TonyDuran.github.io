@@ -28,14 +28,14 @@ function toggleTheme(){
     theme.value = "dark";
     setDarkTheme();
   } else {
-    theme.value = "light";
+    theme.value = "dark";
     setLightTheme();
   }
 }
 
 function loadTheme() {
   if (theme.value == "light"){
-    setLightTheme();
+    setDarkTheme();
   } else {
     setDarkTheme();
   }
