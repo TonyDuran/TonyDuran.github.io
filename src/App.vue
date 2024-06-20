@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { onBeforeMount, provide } from 'vue';
 import NavBar from "@/components/NavBar.vue"
 import { useStorage } from "@vueuse/core";
