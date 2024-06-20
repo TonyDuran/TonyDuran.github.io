@@ -1,44 +1,52 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { onBeforeMount, provide } from 'vue';
 import NavBar from "@/components/NavBar.vue"
 import { useStorage } from "@vueuse/core";
 
+const LIGHT_THEME = "/light-mode.css"
+const DARK_THEME = "/dark-mode.css"
 const theme = useStorage("current-theme", "dark");
-const isDarkMode = ref(true);
 
-const loadTheme = () => {
-  const theme = isDarkMode.value ? 'dark-mode' : 'light-mode';
-  removeCurrentTheme();
-  const link = document.createElement('link');
-  link.rel = 'stylesheet';
-  link.type = 'text/css';
-  link.href = `/${theme}.css`;  // Adjusted to load from the public directory
-  link.id = 'theme-style';
-  document.head.appendChild(link);
-};
+//in case I decide to expand the app. Can make styles available
+provide("theme", theme.value);
 
-const removeCurrentTheme = () => {
-  const existingLink = document.getElementById('theme-style');
-  if (existingLink) {
-    document.head.removeChild(existingLink);
-  }
-};
-
-const toggleTheme = () => {
-  isDarkMode.value = !isDarkMode.value;
-  loadTheme();
-};
-
-onMounted(() => {
+onBeforeMount(async () => {
   loadTheme();
 });
+
+function setLightTheme() {
+  const themeElement = document.getElementById("theme");
+  themeElement?.setAttribute("href", LIGHT_THEME)
+}
+function setDarkTheme() {
+  const themeElement = document.getElementById("theme");
+  themeElement?.setAttribute("href", DARK_THEME)
+}
+
+function toggleTheme(){
+  if (theme.value == "light"){
+    theme.value = "dark";
+    setDarkTheme();
+  } else {
+    theme.value = "light";
+    setLightTheme();
+  }
+}
+
+function loadTheme() {
+  if (theme.value == "light"){
+    setLightTheme();
+  } else {
+    setDarkTheme();
+  }
+
+}
+
 </script>
 
 <template>
   <div id="app">
     <label>
-      <input type="checkbox" v-model="isDarkMode" @change="toggleTheme" />
-      Toggle Light/Dark Mode
     </label>
     <NavBar  :theme="theme" @toggle-theme="toggleTheme" />
     <router-view />
