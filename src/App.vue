@@ -1,54 +1,79 @@
 <script setup lang="ts">
-import { onBeforeMount, provide } from 'vue';
+import { onMounted, ref } from 'vue';
 import NavBar from "@/components/NavBar.vue"
-import { useStorage } from "@vueuse/core";
+import '@/assets/main.css';
 
 const LIGHT_THEME = "/light-mode.css"
 const DARK_THEME = "/dark-mode.css"
-const theme = useStorage("current-theme", "dark");
 
-//in case I decide to expand the app. Can make styles available
-provide("theme", theme.value);
+const theme = ref("dark");
 
-onBeforeMount(async () => {
-  loadTheme();
+onMounted(() => {
+  const saved = localStorage.getItem("current-theme") || "dark";
+  theme.value = saved;
+  applyTheme(saved);
 });
 
-function setLightTheme() {
-  const themeElement = document.getElementById("theme");
-  themeElement?.setAttribute("href", LIGHT_THEME)
-}
-function setDarkTheme() {
-  const themeElement = document.getElementById("theme");
-  themeElement?.setAttribute("href", DARK_THEME)
-}
+function applyTheme(themeValue: string) {
+  const root = document.documentElement;
 
-function toggleTheme(){
-  if (theme.value == "light"){
-    theme.value = "dark";
-    setDarkTheme();
+  if (themeValue === 'light') {
+    root.style.setProperty('--bg-primary', '#f5f3ff');
+    root.style.setProperty('--bg-secondary', '#ede9ff');
+    root.style.setProperty('--bg-tertiary', '#e6e1ff');
+    root.style.setProperty('--text-primary', '#1a1a2e');
+    root.style.setProperty('--text-secondary', '#5a5a7a');
+    root.style.setProperty('--text-muted', '#8a8aaa');
+    root.style.setProperty('--accent-primary', '#0099cc');
+    root.style.setProperty('--accent-secondary', '#9d00ff');
+    root.style.setProperty('--accent-tertiary', '#ffd60a');
+    root.style.setProperty('--accent-danger', '#ff0055');
+    root.style.setProperty('--border-color', 'rgba(157, 0, 255, 0.2)');
+    root.style.setProperty('--shadow-glow', '0 0 20px rgba(157, 0, 255, 0.15)');
   } else {
-    theme.value = "light";
-    setLightTheme();
+    root.style.setProperty('--bg-primary', '#0a0e27');
+    root.style.setProperty('--bg-secondary', '#1a1f3a');
+    root.style.setProperty('--bg-tertiary', '#2a2f4a');
+    root.style.setProperty('--text-primary', '#e0e6ff');
+    root.style.setProperty('--text-secondary', '#a0a6d2');
+    root.style.setProperty('--text-muted', '#707099');
+    root.style.setProperty('--accent-primary', '#00d9ff');
+    root.style.setProperty('--accent-secondary', '#b413f5');
+    root.style.setProperty('--accent-tertiary', '#ffd60a');
+    root.style.setProperty('--accent-danger', '#ff0055');
+    root.style.setProperty('--border-color', 'rgba(0, 217, 255, 0.2)');
+    root.style.setProperty('--shadow-glow', '0 0 20px rgba(0, 217, 255, 0.3)');
   }
+
+  console.log("Applied theme:", themeValue);
 }
 
-function loadTheme() {
-  if (theme.value == "light"){
-    setLightTheme();
-  } else {
-    setDarkTheme();
-  }
-
+function toggleTheme() {
+  console.log("Toggle clicked. Current theme:", theme.value);
+  theme.value = theme.value === "light" ? "dark" : "light";
+  localStorage.setItem("current-theme", theme.value);
+  applyTheme(theme.value);
+  console.log("New theme:", theme.value);
 }
-
 </script>
 
 <template>
   <div id="app">
-    <label>
-    </label>
-    <NavBar  :theme="theme" @toggle-theme="toggleTheme" />
-    <router-view />
+    <NavBar :theme="theme" @toggleTheme="toggleTheme" />
+    <main>
+      <RouterView />
+    </main>
   </div>
 </template>
+
+<style scoped>
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1;
+}
+</style>
