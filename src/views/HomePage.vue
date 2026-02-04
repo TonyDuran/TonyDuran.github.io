@@ -1,4 +1,92 @@
 <script lang="ts" setup>
+import { ref, onMounted, watch } from 'vue'
+
+const builderRoles = [
+  'Software Engineer',
+  'DevOps Engineer',
+  'Cloud Engineer',
+  'Product Engineer'
+]
+
+const breakerRoles = [
+  'Application Security Engineer',
+  'Security Researcher',
+  'CTF Player',
+  'Malware Developer'
+]
+
+const separators = ['and', '&&', '∨', 'or', '||']
+
+const currentBuilderIndex = ref(0)
+const currentBreakerIndex = ref(0)
+const currentSeparatorIndex = ref(0)
+const isBuilderHovered = ref(false)
+const isBreakerHovered = ref(false)
+const isSeparatorHovered = ref(false)
+
+let builderInterval: ReturnType<typeof setInterval> | null = null
+let breakerInterval: ReturnType<typeof setInterval> | null = null
+let separatorInterval: ReturnType<typeof setInterval> | null = null
+
+const startBuilderRotation = () => {
+  isBuilderHovered.value = true
+  if (builderInterval) clearInterval(builderInterval)
+
+  builderInterval = setInterval(() => {
+    currentBuilderIndex.value = (currentBuilderIndex.value + 1) % builderRoles.length
+  }, 1000)
+}
+
+const stopBuilderRotation = () => {
+  isBuilderHovered.value = false
+  if (builderInterval) {
+    clearInterval(builderInterval)
+    builderInterval = null
+  }
+}
+
+const startBreakerRotation = () => {
+  isBreakerHovered.value = true
+  if (breakerInterval) clearInterval(breakerInterval)
+
+  breakerInterval = setInterval(() => {
+    currentBreakerIndex.value = (currentBreakerIndex.value + 1) % breakerRoles.length
+  }, 1000)
+}
+
+const stopBreakerRotation = () => {
+  isBreakerHovered.value = false
+  if (breakerInterval) {
+    clearInterval(breakerInterval)
+    breakerInterval = null
+  }
+}
+
+const startSeparatorRotation = () => {
+  if (separatorInterval) clearInterval(separatorInterval)
+  separatorInterval = setInterval(() => {
+    currentSeparatorIndex.value = (currentSeparatorIndex.value + 1) % separators.length
+  }, 2000)
+}
+
+const stopSeparatorRotation = () => {
+  if (separatorInterval) {
+    clearInterval(separatorInterval)
+    separatorInterval = null
+  }
+}
+
+watch([isBuilderHovered, isBreakerHovered, isSeparatorHovered], () => {
+  if (isBuilderHovered.value || isBreakerHovered.value || isSeparatorHovered.value) {
+    stopSeparatorRotation()
+  } else {
+    startSeparatorRotation()
+  }
+})
+
+onMounted(() => {
+  startSeparatorRotation()
+})
 </script>
 
 <template>
@@ -7,13 +95,34 @@
     <section class="hero">
       <div class="container hero-content">
         <div class="hero-text">
-          <h1 class="hero-title">
-            <span class="gradient-text">security engineer</span><br />
-            <span class="text-muted">by day</span>
-          </h1>
-          <p class="hero-subtitle">
-            building secure systems and exploring exploit development
-          </p>
+          <h1 class="hero-name">Tony Duran is a</h1>
+          <h2 class="hero-title">
+            <div class="roles-container">
+              <span
+                class="role-text builder"
+                @mouseenter="startBuilderRotation"
+                @mouseleave="stopBuilderRotation"
+              >
+                <span v-if="!isBuilderHovered">Builder</span>
+                <span v-else class="rotating-role">{{ builderRoles[currentBuilderIndex] }}</span>
+              </span>
+              <span
+                class="separator"
+                @mouseenter="isSeparatorHovered = true"
+                @mouseleave="isSeparatorHovered = false"
+              >
+                {{ separators[currentSeparatorIndex] }}
+              </span>
+              <span
+                class="role-text breaker"
+                @mouseenter="startBreakerRotation"
+                @mouseleave="stopBreakerRotation"
+              >
+                <span v-if="!isBreakerHovered">Breaker</span>
+                <span v-else class="rotating-role">{{ breakerRoles[currentBreakerIndex] }}</span>
+              </span>
+            </div>
+          </h2>
           <div class="hero-cta">
             <router-link to="/projects" class="btn">explore projects</router-link>
             <router-link to="/thoughts" class="btn btn-secondary">read thoughts</router-link>
@@ -77,41 +186,111 @@
   padding: 6rem 0;
   background: linear-gradient(
     135deg,
-    rgba(0, 217, 255, 0.05) 0%,
-    rgba(180, 19, 245, 0.05) 100%
+    rgba(0, 255, 255, 0.08) 0%,
+    rgba(255, 0, 255, 0.08) 100%
   );
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 2px solid var(--accent-primary);
+  box-shadow: inset 0 0 30px rgba(0, 255, 255, 0.05);
 }
 
 .hero-content {
   display: flex;
   align-items: center;
-  min-height: 400px;
+  min-height: 800px;
+  justify-content: center;
 }
 
 .hero-text {
-  max-width: 800px;
+  max-width: 1200px;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .hero-title {
-  margin-bottom: 1.5rem;
-  font-size: 4rem;
-  line-height: 1.1;
+  margin: 2rem 0;
+  line-height: 1.2;
   letter-spacing: -2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
-.gradient-text {
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+.hero-name {
+  font-size: 6rem;
+  margin-bottom: 3rem;
+  font-weight: 700;
+  text-align: center;
+  background: linear-gradient(90deg, #00ffff, #ff00ff, #ffff00, #00ffff);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.5));
 }
+
+.roles-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 3rem;
+}
+
+.role-text {
+  display: inline-block;
+  transition: all 0.5s ease;
+  white-space: nowrap;
+}
+
+.role-text span {
+  font-size: 5.8rem;
+  font-weight: 700;
+}
+
+.rotating-role {
+  font-size: 3.8rem !important;
+}
+
+.role-text.builder {
+  color: var(--accent-primary);
+  text-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
+  width: 700px;
+  text-align: right;
+}
+
+.role-text.builder:hover {
+  text-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+}
+
+.role-text.breaker {
+  color: var(--accent-secondary);
+  text-shadow: 0 0 8px rgba(255, 0, 255, 0.3);
+  width: 700px;
+  text-align: left;
+}
+
+.role-text.breaker:hover {
+  text-shadow: 0 0 15px rgba(255, 0, 255, 0.6);
+}
+
+.separator {
+  display: inline-block;
+  margin: 0 1.5rem;
+  color: var(--text-secondary);
+  font-size: 5.5rem;
+  font-weight: 700;
+}
+
 
 .hero-subtitle {
   font-size: 1.25rem;
   color: var(--text-secondary);
   margin-bottom: 2rem;
   max-width: 600px;
+  text-shadow: 0 0 8px rgba(0, 255, 255, 0.2);
 }
 
 .hero-cta {
@@ -163,22 +342,24 @@
 
 .about-card {
   padding: 2rem;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid var(--accent-primary);
   border-radius: 8px;
   transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.1), inset 0 0 15px rgba(0, 255, 255, 0.05);
 }
 
 .about-card:hover {
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 20px rgba(0, 217, 255, 0.2);
+  border-color: var(--accent-secondary);
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.3), 0 0 20px rgba(255, 0, 255, 0.2), inset 0 0 15px rgba(0, 255, 255, 0.1);
   transform: translateY(-4px);
 }
 
 .about-card h3 {
   margin-bottom: 1rem;
   font-size: 1.2rem;
-  color: var(--text-primary);
+  color: var(--accent-primary);
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
 }
 
 .about-card p {
@@ -204,11 +385,13 @@
   font-weight: 600;
   white-space: nowrap;
   transition: all 0.3s ease;
+  text-shadow: 0 0 8px rgba(255, 255, 0, 0.3);
 }
 
 .view-all:hover {
   color: var(--accent-primary);
   transform: translateX(4px);
+  text-shadow: 0 0 12px rgba(0, 255, 255, 0.5);
 }
 
 .section-intro {

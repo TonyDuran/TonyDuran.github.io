@@ -1,21 +1,29 @@
 :root {
-  /* Cyberpunk Light Mode */
-  --bg-primary: #f5f3ff;
-  --bg-secondary: #ede9ff;
-  --bg-tertiary: #e6e1ff;
+  /* Synthwave Light Mode - Bright Colors on Light Background */
+  --bg-primary: #e8f6ff;
+  --bg-secondary: #f0eef8;
+  --bg-tertiary: #e8e6f0;
 
   --text-primary: #1a1a2e;
-  --text-secondary: #5a5a7a;
-  --text-muted: #8a8aaa;
+  --text-secondary: #4a4a6a;
+  --text-muted: #7a7a9a;
 
-  /* Cyberpunk Accents */
-  --accent-primary: #0099cc; /* Deep Cyan */
-  --accent-secondary: #9d00ff; /* Deep Purple */
-  --accent-tertiary: #ffd60a; /* Yellow */
+  /* Vibrant Synthwave Accents - Light Mode */
+  --accent-primary: #0099dd; /* Bright Cyan */
+  --accent-secondary: #dd0099; /* Bright Magenta */
+  --accent-tertiary: #ccaa00; /* Golden Yellow */
   --accent-danger: #ff0055; /* Hot Pink */
 
-  --border-color: rgba(157, 0, 255, 0.2);
-  --shadow-glow: 0 0 20px rgba(157, 0, 255, 0.15);
+  /* Glow effects */
+  --glow-cyan: 0 0 10px rgba(0, 153, 221, 0.4), 0 0 20px rgba(0, 153, 221, 0.2);
+  --glow-magenta: 0 0 10px rgba(221, 0, 153, 0.4), 0 0 20px rgba(221, 0, 153, 0.2);
+  --glow-pink: 0 0 10px rgba(255, 0, 85, 0.3), 0 0 20px rgba(255, 0, 85, 0.15);
+
+  --border-color: rgba(0, 153, 221, 0.3);
+  --shadow-glow: 0 0 20px rgba(0, 153, 221, 0.2), 0 0 40px rgba(221, 0, 153, 0.1);
+
+  /* Grid color for light mode - subtle but visible */
+  --grid-color-1: rgba(0, 153, 221, 0.1);
 }
 
 html, body {

@@ -67,11 +67,14 @@ onMounted(async () => {
 .metadata {
   margin-bottom: 2rem;
   padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 2px solid var(--accent-primary);
+  box-shadow: 0 2px 10px rgba(0, 255, 255, 0.1);
 }
 
 .date {
   font-size: 0.9rem;
+  color: var(--text-secondary);
+  text-shadow: 0 0 5px rgba(0, 255, 255, 0.2);
 }
 
 .markdown-content {
@@ -96,18 +99,21 @@ onMounted(async () => {
 .markdown-content h1 {
   font-size: 2rem;
   color: var(--accent-primary);
+  text-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
 }
 
 .markdown-content h2 {
   font-size: 1.75rem;
   color: var(--accent-secondary);
-  border-bottom: 2px solid var(--border-color);
+  border-bottom: 2px solid var(--accent-secondary);
   padding-bottom: 0.5rem;
+  text-shadow: 0 0 12px rgba(255, 0, 255, 0.4);
 }
 
 .markdown-content h3 {
   font-size: 1.5rem;
-  color: var(--text-primary);
+  color: var(--accent-tertiary);
+  text-shadow: 0 0 10px rgba(255, 255, 0, 0.4);
 }
 
 .markdown-content p {
@@ -127,21 +133,24 @@ onMounted(async () => {
 }
 
 .markdown-content code {
-  background: var(--bg-secondary) !important;
+  background: rgba(0, 0, 0, 0.5) !important;
   color: var(--text-primary) !important;
   padding: 0.25rem 0.5rem !important;
   border-radius: 3px !important;
   font-size: 0.9em !important;
   font-family: 'Monaco', 'Menlo', monospace !important;
+  border-left: 2px solid var(--accent-primary) !important;
 }
 
 .markdown-content pre {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  border-left: 3px solid var(--accent-primary);
   border-radius: 6px;
   padding: 1.5rem;
   overflow-x: auto;
   margin: 1.5rem 0;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.1), inset 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
 .markdown-content pre code {

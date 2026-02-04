@@ -62,9 +62,10 @@ const isActive = (path: string) => {
   top: 0;
   z-index: 1000;
   background: var(--bg-primary);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 2px solid var(--accent-primary);
   backdrop-filter: blur(10px);
   background-color: rgba(10, 14, 39, 0.95);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.1), inset 0 -1px 0 rgba(0, 255, 255, 0.2);
 }
 
 .navbar-content {
@@ -91,10 +92,11 @@ const isActive = (path: string) => {
 .logo-text {
   color: var(--accent-primary);
   transition: all 0.3s ease;
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
 }
 
 .logo-text:hover {
-  text-shadow: 0 0 10px var(--accent-primary);
+  text-shadow: 0 0 20px var(--accent-primary), 0 0 10px rgba(255, 0, 255, 0.3);
   transform: scale(1.05);
 }
 
@@ -115,11 +117,12 @@ const isActive = (path: string) => {
 
 .nav-link:hover {
   color: var(--accent-primary);
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
 }
 
 .nav-link.active {
   color: var(--accent-primary);
-  text-shadow: 0 0 10px var(--accent-primary);
+  text-shadow: 0 0 15px var(--accent-primary);
 }
 
 .nav-link::after {
@@ -159,10 +162,11 @@ const isActive = (path: string) => {
   border-radius: 20px;
   cursor: pointer;
   transition: all 0.3s ease;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3), inset 0 0 10px rgba(0, 255, 255, 0.05);
 }
 
 #theme-label:hover {
-  box-shadow: var(--shadow-glow);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.5), inset 0 0 10px rgba(0, 255, 255, 0.1);
 }
 
 #theme-label::after {

@@ -1,21 +1,29 @@
 :root {
-  /* Cyberpunk Dark Mode */
+  /* Synthwave Dark Mode - Vibrant Neon */
   --bg-primary: #0a0e27;
   --bg-secondary: #1a1f3a;
   --bg-tertiary: #2a2f4a;
 
-  --text-primary: #e0e6ff;
-  --text-secondary: #a0a6d2;
+  --text-primary: #ffffff;
+  --text-secondary: #b0b0ff;
   --text-muted: #707099;
 
-  /* Cyberpunk Accents */
-  --accent-primary: #00d9ff; /* Cyan */
-  --accent-secondary: #b413f5; /* Purple */
-  --accent-tertiary: #ffd60a; /* Yellow */
+  /* Vibrant Synthwave Accents */
+  --accent-primary: #00ffff; /* Hot Cyan */
+  --accent-secondary: #ff00ff; /* Hot Magenta */
+  --accent-tertiary: #ffff00; /* Bright Yellow */
   --accent-danger: #ff0055; /* Hot Pink */
 
-  --border-color: rgba(0, 217, 255, 0.2);
-  --shadow-glow: 0 0 20px rgba(0, 217, 255, 0.3);
+  /* Glow effects */
+  --glow-cyan: 0 0 10px #00ffff, 0 0 20px rgba(0, 255, 255, 0.5);
+  --glow-magenta: 0 0 10px #ff00ff, 0 0 20px rgba(255, 0, 255, 0.5);
+  --glow-pink: 0 0 10px #ff0055, 0 0 20px rgba(255, 0, 85, 0.5);
+
+  --border-color: rgba(0, 255, 255, 0.3);
+  --shadow-glow: 0 0 20px rgba(0, 255, 255, 0.4), 0 0 40px rgba(255, 0, 255, 0.2);
+
+  /* Grid color for dark mode */
+  --grid-color-1: rgba(0, 255, 255, 0.15);
 }
 
 html, body {
