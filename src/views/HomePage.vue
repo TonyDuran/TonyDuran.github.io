@@ -7,9 +7,10 @@ const toggleTheme = inject<() => void>('toggleTheme', () => {})
 
 const builderRoles = [
   'Software Engineer',
+  'Product Engineer',
+  'Full-Stack Developer',
   'DevOps Engineer',
   'Cloud Engineer',
-  'Product Engineer'
 ]
 
 const breakerRoles = [
