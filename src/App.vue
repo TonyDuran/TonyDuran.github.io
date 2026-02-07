@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import NavBar from "@/components/NavBar.vue"
+import { onMounted, provide, ref } from 'vue';
 import '@/assets/main.css';
-
-const LIGHT_THEME = "/light-mode.css"
-const DARK_THEME = "/dark-mode.css"
+import SpiralBackground from '@/components/SpiralBackground.vue';
+import CyberpunkOverlay from '@/components/CyberpunkOverlay.vue';
+import DroneCursor from '@/components/DroneCursor.vue';
 
 const theme = ref("dark");
+
+provide('theme', theme);
+provide('toggleTheme', toggleTheme);
 
 onMounted(() => {
   const saved = localStorage.getItem("current-theme") || "dark";
@@ -17,19 +19,34 @@ onMounted(() => {
 function applyTheme(themeValue: string) {
   const root = document.documentElement;
 
+  // Switch the CSS file link to load the correct theme defaults
+  const themeLink = document.getElementById('theme') as HTMLLinkElement | null;
+  if (themeLink) {
+    themeLink.href = themeValue === 'light' ? '/light-mode.css' : '/dark-mode.css';
+  }
+
   if (themeValue === 'light') {
-    root.style.setProperty('--bg-primary', '#f5f3ff');
-    root.style.setProperty('--bg-secondary', '#ede9ff');
-    root.style.setProperty('--bg-tertiary', '#e6e1ff');
-    root.style.setProperty('--text-primary', '#1a1a2e');
-    root.style.setProperty('--text-secondary', '#5a5a7a');
-    root.style.setProperty('--text-muted', '#8a8aaa');
-    root.style.setProperty('--accent-primary', '#0099cc');
-    root.style.setProperty('--accent-secondary', '#9d00ff');
-    root.style.setProperty('--accent-tertiary', '#ffd60a');
-    root.style.setProperty('--accent-danger', '#ff0055');
-    root.style.setProperty('--border-color', 'rgba(157, 0, 255, 0.2)');
-    root.style.setProperty('--shadow-glow', '0 0 20px rgba(157, 0, 255, 0.15)');
+    root.style.setProperty('--bg-primary', '#fdf0d5');
+    root.style.setProperty('--bg-secondary', '#f5e4c0');
+    root.style.setProperty('--bg-tertiary', '#ebd8aa');
+    root.style.setProperty('--text-primary', '#2a1f0e');
+    root.style.setProperty('--text-secondary', '#5a4a2e');
+    root.style.setProperty('--text-muted', '#8a7a5e');
+    root.style.setProperty('--accent-primary', '#007a8a');
+    root.style.setProperty('--accent-secondary', '#b8336a');
+    root.style.setProperty('--accent-tertiary', '#cc8800');
+    root.style.setProperty('--accent-danger', '#cc2244');
+    root.style.setProperty('--border-color', 'rgba(0, 122, 138, 0.25)');
+    root.style.setProperty('--shadow-glow', '0 0 20px rgba(0, 122, 138, 0.15)');
+    root.style.setProperty('--hero-grad-1', '#007a8a');
+    root.style.setProperty('--hero-grad-2', '#b8336a');
+    root.style.setProperty('--hero-grad-3', '#cc8800');
+    root.style.setProperty('--hero-grad-4', '#007a8a');
+    root.style.setProperty('--hero-glow', 'rgba(0, 122, 138, 0.4)');
+    root.style.setProperty('--glitch-color-1', 'rgba(0, 122, 138, 0.3)');
+    root.style.setProperty('--glitch-color-2', 'rgba(184, 51, 106, 0.3)');
+    root.style.setProperty('--scanline-color', 'rgba(90, 70, 30, 0.02)');
+    root.style.setProperty('--vignette-color', 'rgba(200, 180, 140, 0.3)');
   } else {
     root.style.setProperty('--bg-primary', '#0a0e27');
     root.style.setProperty('--bg-secondary', '#1a1f3a');
@@ -43,26 +60,37 @@ function applyTheme(themeValue: string) {
     root.style.setProperty('--accent-danger', '#ff0055');
     root.style.setProperty('--border-color', 'rgba(0, 217, 255, 0.2)');
     root.style.setProperty('--shadow-glow', '0 0 20px rgba(0, 217, 255, 0.3)');
+    root.style.setProperty('--hero-grad-1', '#00ffff');
+    root.style.setProperty('--hero-grad-2', '#ff00ff');
+    root.style.setProperty('--hero-grad-3', '#ffff00');
+    root.style.setProperty('--hero-grad-4', '#00ffff');
+    root.style.setProperty('--hero-glow', 'rgba(0, 255, 255, 0.5)');
+    root.style.setProperty('--glitch-color-1', 'rgba(0, 255, 255, 0.5)');
+    root.style.setProperty('--glitch-color-2', 'rgba(255, 0, 255, 0.5)');
+    root.style.setProperty('--scanline-color', 'rgba(0, 255, 255, 0.03)');
+    root.style.setProperty('--vignette-color', 'rgba(0, 0, 0, 0.5)');
   }
-
-  console.log("Applied theme:", themeValue);
 }
 
 function toggleTheme() {
-  console.log("Toggle clicked. Current theme:", theme.value);
   theme.value = theme.value === "light" ? "dark" : "light";
   localStorage.setItem("current-theme", theme.value);
   applyTheme(theme.value);
-  console.log("New theme:", theme.value);
 }
 </script>
 
 <template>
   <div id="app">
-    <NavBar :theme="theme" @toggleTheme="toggleTheme" />
+    <SpiralBackground :theme="theme" />
+    <CyberpunkOverlay />
     <main>
-      <RouterView />
+      <RouterView v-slot="{ Component }">
+        <transition name="page" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </RouterView>
     </main>
+    <DroneCursor />
   </div>
 </template>
 
@@ -75,5 +103,21 @@ function toggleTheme() {
 
 main {
   flex: 1;
+}
+
+/* Route transition */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-20px);
 }
 </style>

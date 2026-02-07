@@ -1,29 +1,50 @@
 :root {
-  /* Synthwave Light Mode - Bright Colors on Light Background */
-  --bg-primary: #e8f6ff;
-  --bg-secondary: #f0eef8;
-  --bg-tertiary: #e8e6f0;
+  /* Warm Golden Cyberpunk Light Mode — amber/cream bg, deep teal & rose accents */
+  --bg-primary: #fdf0d5;
+  --bg-secondary: #f5e4c0;
+  --bg-tertiary: #ebd8aa;
 
-  --text-primary: #1a1a2e;
-  --text-secondary: #4a4a6a;
-  --text-muted: #7a7a9a;
+  --text-primary: #2a1f0e;
+  --text-secondary: #5a4a2e;
+  --text-muted: #8a7a5e;
 
-  /* Vibrant Synthwave Accents - Light Mode */
-  --accent-primary: #0099dd; /* Bright Cyan */
-  --accent-secondary: #dd0099; /* Bright Magenta */
-  --accent-tertiary: #ccaa00; /* Golden Yellow */
-  --accent-danger: #ff0055; /* Hot Pink */
+  /* Deep warm accents that contrast on cream */
+  --accent-primary: #007a8a;   /* Deep teal */
+  --accent-secondary: #b8336a; /* Warm rose-magenta */
+  --accent-tertiary: #cc8800;  /* Amber gold */
+  --accent-danger: #cc2244;    /* Warm red */
 
   /* Glow effects */
-  --glow-cyan: 0 0 10px rgba(0, 153, 221, 0.4), 0 0 20px rgba(0, 153, 221, 0.2);
-  --glow-magenta: 0 0 10px rgba(221, 0, 153, 0.4), 0 0 20px rgba(221, 0, 153, 0.2);
-  --glow-pink: 0 0 10px rgba(255, 0, 85, 0.3), 0 0 20px rgba(255, 0, 85, 0.15);
+  --glow-cyan: 0 0 10px rgba(0, 122, 138, 0.3), 0 0 20px rgba(0, 122, 138, 0.15);
+  --glow-magenta: 0 0 10px rgba(184, 51, 106, 0.3), 0 0 20px rgba(184, 51, 106, 0.15);
+  --glow-pink: 0 0 10px rgba(204, 34, 68, 0.3), 0 0 20px rgba(204, 34, 68, 0.15);
 
-  --border-color: rgba(0, 153, 221, 0.3);
-  --shadow-glow: 0 0 20px rgba(0, 153, 221, 0.2), 0 0 40px rgba(221, 0, 153, 0.1);
+  --border-color: rgba(0, 122, 138, 0.25);
+  --shadow-glow: 0 0 20px rgba(0, 122, 138, 0.15), 0 0 40px rgba(184, 51, 106, 0.08);
 
-  /* Grid color for light mode - subtle but visible */
-  --grid-color-1: rgba(0, 153, 221, 0.1);
+  /* Grid color */
+  --grid-color-1: rgba(0, 122, 138, 0.1);
+
+  /* Spiral background */
+  --spiral-arm-color: rgba(0, 122, 138, 0.25);
+  --spiral-arm-color-alt: rgba(184, 51, 106, 0.18);
+  --spiral-particle-color: rgba(0, 122, 138, 0.5);
+  --spiral-clear-color: rgba(253, 240, 213, 0.08);
+
+  /* CRT overlay */
+  --scanline-color: rgba(90, 70, 30, 0.02);
+  --vignette-color: rgba(200, 180, 140, 0.3);
+
+  /* Glitch effect */
+  --glitch-color-1: rgba(0, 122, 138, 0.3);
+  --glitch-color-2: rgba(184, 51, 106, 0.3);
+
+  /* Hero gradient */
+  --hero-grad-1: #007a8a;
+  --hero-grad-2: #b8336a;
+  --hero-grad-3: #cc8800;
+  --hero-grad-4: #007a8a;
+  --hero-glow: rgba(0, 122, 138, 0.4);
 }
 
 html, body {

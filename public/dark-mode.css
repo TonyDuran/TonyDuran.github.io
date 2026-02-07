@@ -24,6 +24,27 @@
 
   /* Grid color for dark mode */
   --grid-color-1: rgba(0, 255, 255, 0.15);
+
+  /* Spiral background */
+  --spiral-arm-color: rgba(0, 255, 255, 0.4);
+  --spiral-arm-color-alt: rgba(255, 0, 255, 0.3);
+  --spiral-particle-color: rgba(0, 255, 255, 0.8);
+  --spiral-clear-color: rgba(10, 14, 39, 0.08);
+
+  /* CRT overlay */
+  --scanline-color: rgba(0, 255, 255, 0.03);
+  --vignette-color: rgba(0, 0, 0, 0.5);
+
+  /* Glitch effect */
+  --glitch-color-1: rgba(0, 255, 255, 0.5);
+  --glitch-color-2: rgba(255, 0, 255, 0.5);
+
+  /* Hero gradient */
+  --hero-grad-1: #00ffff;
+  --hero-grad-2: #ff00ff;
+  --hero-grad-3: #ffff00;
+  --hero-grad-4: #00ffff;
+  --hero-glow: rgba(0, 255, 255, 0.5);
 }
 
 html, body {
