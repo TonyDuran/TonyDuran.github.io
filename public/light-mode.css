@@ -1,11 +1,62 @@
+:root {
+  /* Warm Golden Cyberpunk Light Mode — amber/cream bg, deep teal & rose accents */
+  --bg-primary: #fdf0d5;
+  --bg-secondary: #f5e4c0;
+  --bg-tertiary: #ebd8aa;
+
+  --text-primary: #2a1f0e;
+  --text-secondary: #5a4a2e;
+  --text-muted: #8a7a5e;
+
+  /* Deep warm accents that contrast on cream */
+  --accent-primary: #007a8a;   /* Deep teal */
+  --accent-secondary: #b8336a; /* Warm rose-magenta */
+  --accent-tertiary: #cc8800;  /* Amber gold */
+  --accent-danger: #cc2244;    /* Warm red */
+
+  /* Glow effects */
+  --glow-cyan: 0 0 10px rgba(0, 122, 138, 0.3), 0 0 20px rgba(0, 122, 138, 0.15);
+  --glow-magenta: 0 0 10px rgba(184, 51, 106, 0.3), 0 0 20px rgba(184, 51, 106, 0.15);
+  --glow-pink: 0 0 10px rgba(204, 34, 68, 0.3), 0 0 20px rgba(204, 34, 68, 0.15);
+
+  --border-color: rgba(0, 122, 138, 0.25);
+  --shadow-glow: 0 0 20px rgba(0, 122, 138, 0.15), 0 0 40px rgba(184, 51, 106, 0.08);
+
+  /* Grid color */
+  --grid-color-1: rgba(0, 122, 138, 0.1);
+
+  /* Spiral background */
+  --spiral-arm-color: rgba(0, 122, 138, 0.25);
+  --spiral-arm-color-alt: rgba(184, 51, 106, 0.18);
+  --spiral-particle-color: rgba(0, 122, 138, 0.5);
+  --spiral-clear-color: rgba(253, 240, 213, 0.08);
+
+  /* CRT overlay */
+  --scanline-color: rgba(90, 70, 30, 0.02);
+  --vignette-color: rgba(200, 180, 140, 0.3);
+
+  /* Glitch effect */
+  --glitch-color-1: rgba(0, 122, 138, 0.3);
+  --glitch-color-2: rgba(184, 51, 106, 0.3);
+
+  /* Hero gradient */
+  --hero-grad-1: #007a8a;
+  --hero-grad-2: #b8336a;
+  --hero-grad-3: #cc8800;
+  --hero-grad-4: #007a8a;
+  --hero-glow: rgba(0, 122, 138, 0.4);
+}
+
+html, body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
 body {
-    background-color: #ffffff;
-    color: #000000;
-    margin: 0;
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  letter-spacing: 0.3px;
+}

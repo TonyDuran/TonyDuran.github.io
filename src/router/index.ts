@@ -8,6 +8,11 @@ const routes = [
       component: Home
     },
     {
+      path: '/experiments',
+      name: 'experiments',
+      component: () => import('@/views/ExperimentsPage.vue')
+    },
+    {
       path: '/:pathMatch(.*)*',
       redirect: '/'
     }
@@ -16,18 +21,6 @@ const routes = [
 const router = createRouter({
   history: createWebHashHistory(),
   routes
-});
-
-router.beforeEach((to, from, next) => {
-
-  const routeExists = routes.some(route => route.path === to.path);
-  if (!routeExists) {
-    // document.title = 'Home'; //examples on how to set the chrome tab title
-    next({ path: '/', replace: true });
-  } else {
-    // document.title = to.meta.title as string || 'The Portfolio';
-    next();
-  }
 });
 
 export default router;
