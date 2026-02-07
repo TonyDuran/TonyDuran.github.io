@@ -13,7 +13,7 @@ const palette = computed(() => {
       primary: [0, 122, 138],     // deep teal — visible on warm cream
       secondary: [184, 51, 106],   // warm rose-magenta
       bg: [253, 240, 213],         // warm cream (#fdf0d5)
-      trailAlpha: 0.07,            // slightly higher so shapes stay visible longer
+      trailAlpha: 0.07,
     }
   }
   return {
@@ -27,11 +27,15 @@ const palette = computed(() => {
 // --- Shape system ---
 interface GeoShape {
   z: number           // depth: 0 = vanishing point, 1 = at viewer
-  zSpeed: number      // how fast it approaches (units/s)
+  zSpeed: number      // base speed
   angle: number       // direction from vanishing point (radians)
   angleDrift: number  // slow angular drift (rad/s)
   rotation: number    // shape's own spin (radians)
   rotSpeed: number    // spin speed (rad/s)
+  tiltX: number       // 3D tumble angle around X axis
+  tiltY: number       // 3D tumble angle around Y axis
+  tiltXSpeed: number
+  tiltYSpeed: number
   sides: number
   baseRadius: number  // size at z=1
   colorIdx: number    // 0 = primary, 1 = secondary
@@ -51,6 +55,10 @@ function spawnShape(partial?: Partial<GeoShape>): GeoShape {
     angleDrift: (Math.random() - 0.5) * 0.05,
     rotation: Math.random() * Math.PI * 2,
     rotSpeed: (Math.random() - 0.5) * 0.4,
+    tiltX: Math.random() * Math.PI * 2,
+    tiltY: Math.random() * Math.PI * 2,
+    tiltXSpeed: (Math.random() - 0.5) * 0.25,
+    tiltYSpeed: (Math.random() - 0.5) * 0.25,
     sides: 3 + Math.floor(Math.random() * 6), // 3-8
     baseRadius: 50 + Math.random() * 120,
     colorIdx: Math.random() > 0.5 ? 1 : 0,
@@ -69,40 +77,62 @@ function rgba(rgb: number[], a: number): string {
   return `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a})`
 }
 
-function drawPoly(
+function drawPoly3D(
   ctx: CanvasRenderingContext2D,
   cx: number, cy: number,
-  radius: number, sides: number, rotation: number,
+  radius: number, sides: number,
+  rotation: number, tiltX: number, tiltY: number,
   color: string, lineWidth: number,
+  fill = false,
 ) {
+  const cosX = Math.cos(tiltX), sinX = Math.sin(tiltX)
+  const cosY = Math.cos(tiltY), sinY = Math.sin(tiltY)
+
   ctx.beginPath()
   for (let i = 0; i <= sides; i++) {
     const a = rotation + (Math.PI * 2 * i) / sides
-    const x = cx + radius * Math.cos(a)
-    const y = cy + radius * Math.sin(a)
-    if (i === 0) ctx.moveTo(x, y)
-    else ctx.lineTo(x, y)
+    const px = radius * Math.cos(a)
+    const py = radius * Math.sin(a)
+
+    // Rotate around X axis, then Y axis for 3D tumble
+    const y1 = py * cosX
+    const z1 = py * sinX
+    const x1 = px * cosY + z1 * sinY
+
+    if (i === 0) ctx.moveTo(cx + x1, cy + y1)
+    else ctx.lineTo(cx + x1, cy + y1)
   }
   ctx.closePath()
-  ctx.strokeStyle = color
-  ctx.lineWidth = lineWidth
-  ctx.stroke()
+
+  if (fill) {
+    ctx.fillStyle = color
+    ctx.fill()
+  } else {
+    ctx.strokeStyle = color
+    ctx.lineWidth = lineWidth
+    ctx.stroke()
+  }
 }
 
 function drawGlowShape(
   ctx: CanvasRenderingContext2D,
   cx: number, cy: number,
-  radius: number, sides: number, rotation: number,
+  radius: number, sides: number,
+  rotation: number, tiltX: number, tiltY: number,
   rgb: number[], intensity: number,
 ) {
+  // Faint inner fill for closer shapes — adds depth and solidity
+  if (intensity > 0.3) {
+    drawPoly3D(ctx, cx, cy, radius, sides, rotation, tiltX, tiltY, rgba(rgb, intensity * 0.04), 0, true)
+  }
   // Outer bloom
-  drawPoly(ctx, cx, cy, radius, sides, rotation, rgba(rgb, intensity * 0.08), 24)
+  drawPoly3D(ctx, cx, cy, radius, sides, rotation, tiltX, tiltY, rgba(rgb, intensity * 0.08), 24)
   // Mid glow
-  drawPoly(ctx, cx, cy, radius, sides, rotation, rgba(rgb, intensity * 0.2), 8)
+  drawPoly3D(ctx, cx, cy, radius, sides, rotation, tiltX, tiltY, rgba(rgb, intensity * 0.2), 8)
   // Core edge
-  drawPoly(ctx, cx, cy, radius, sides, rotation, rgba(rgb, intensity * 0.7), 2)
+  drawPoly3D(ctx, cx, cy, radius, sides, rotation, tiltX, tiltY, rgba(rgb, intensity * 0.7), 2)
   // Hot center line
-  drawPoly(ctx, cx, cy, radius, sides, rotation, rgba([255, 255, 255], intensity * 0.15), 1)
+  drawPoly3D(ctx, cx, cy, radius, sides, rotation, tiltX, tiltY, rgba([255, 255, 255], intensity * 0.15), 1)
 }
 
 function draw(ctx: CanvasRenderingContext2D, w: number, h: number, dt: number) {
@@ -119,10 +149,12 @@ function draw(ctx: CanvasRenderingContext2D, w: number, h: number, dt: number) {
   const sorted = [...shapes].sort((a, b) => a.z - b.z)
 
   for (const s of sorted) {
-    // Update
-    s.z += s.zSpeed * dt
+    // Update with perspective acceleration — shapes speed up as they approach
+    s.z += s.zSpeed * (1 + s.z * 2) * dt
     s.angle += s.angleDrift * dt
     s.rotation += s.rotSpeed * dt
+    s.tiltX += s.tiltXSpeed * dt
+    s.tiltY += s.tiltYSpeed * dt
 
     // Respawn when past viewer
     if (s.z > 1.3) {
@@ -146,7 +178,7 @@ function draw(ctx: CanvasRenderingContext2D, w: number, h: number, dt: number) {
     if (size < 2) continue
 
     const rgb = s.colorIdx === 0 ? p.primary : p.secondary
-    drawGlowShape(ctx, screenX, screenY, size, s.sides, s.rotation, rgb, intensity)
+    drawGlowShape(ctx, screenX, screenY, size, s.sides, s.rotation, s.tiltX, s.tiltY, rgb, intensity)
   }
 }
 

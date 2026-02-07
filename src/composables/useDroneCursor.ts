@@ -2,7 +2,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useMouse, useRafFn, useMediaQuery } from '@vueuse/core'
 
 export function useDroneCursor() {
-  const { x: mouseX, y: mouseY } = useMouse()
+  const { x: mouseX, y: mouseY } = useMouse({ type: 'client' })
   const isMobile = useMediaQuery('(max-width: 768px)')
 
   const droneX = ref(0)
@@ -46,10 +46,25 @@ export function useDroneCursor() {
 
     if (isLocked.value) {
       const target = e.target as HTMLElement
+      // Don't interfere with orbit item clicks (links, nav buttons)
       if (target.closest('.orbit-item') || target.closest('.orbit-link')) {
         return
       }
-      unlock()
+
+      // Shift+click anywhere → unlock
+      if (e.shiftKey) {
+        unlock()
+        return
+      }
+
+      // Only unlock if clicking inside the orbit circle
+      const dx = e.clientX - droneX.value
+      const dy = e.clientY - droneY.value
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      if (dist <= outerRadius + 15) {
+        unlock()
+      }
+      // Otherwise: stay pinned, don't follow
     } else {
       lock()
     }

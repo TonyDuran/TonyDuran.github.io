@@ -19,8 +19,8 @@ const isFullscreen = ref(false)
     <section class="experiment-card" :class="{ 'fs-card': isFullscreen }">
       <div v-if="!isFullscreen" class="card-header">
         <div>
-          <h2 class="experiment-title">Builder vs Breaker</h2>
-          <p class="experiment-desc">A cyberpunk cityscape where creation and destruction happen in real time.</p>
+          <h2 class="experiment-title">Builder vs Breaker (AI Generated with Opus 4.6)</h2>
+          <p class="experiment-desc">A cyberpunk cityscape where creation and destruction happen in real time. This was just a challenge to see what Claude code can do.</p>
         </div>
         <button class="expand-btn" @click="isFullscreen = true">Fullscreen</button>
       </div>

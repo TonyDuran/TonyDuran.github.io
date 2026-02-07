@@ -1,6 +1,7 @@
 <script lang="ts" setup>
-import { inject, ref, type Ref } from 'vue'
+import { inject, ref, onMounted, onUnmounted, type Ref } from 'vue'
 import ThemeToggle from '@/components/ThemeToggle.vue'
+import SkillGraph from '@/components/SkillGraph.vue'
 
 const theme = inject<Ref<string>>('theme', ref('dark'))
 const toggleTheme = inject<() => void>('toggleTheme', () => {})
@@ -22,6 +23,27 @@ const breakerRoles = [
 
 const isBuilderExpanded = ref(false)
 const isBreakerExpanded = ref(false)
+
+// Scroll-reveal for about section
+const aboutRef = ref<HTMLElement | null>(null)
+const aboutVisible = ref(false)
+let observer: IntersectionObserver | null = null
+
+onMounted(() => {
+  if (aboutRef.value) {
+    observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) aboutVisible.value = true
+      },
+      { threshold: 0.15 },
+    )
+    observer.observe(aboutRef.value)
+  }
+})
+
+onUnmounted(() => {
+  observer?.disconnect()
+})
 </script>
 
 <template>
@@ -72,6 +94,23 @@ const isBreakerExpanded = ref(false)
           <div class="theme-toggle-area">
             <ThemeToggle :theme="theme" @toggle="toggleTheme" />
           </div>
+        </div>
+      </div>
+    </section>
+
+    <section ref="aboutRef" class="about-section" :class="{ visible: aboutVisible }">
+      <div class="about-container">
+        <div class="about-text">
+          <h2 class="section-title">About</h2>
+          <p class="about-tagline">The stack behind the segfaults.</p>
+          <p class="about-bio">
+            Security Software Engineer from Texas, currently pursuing a Masters at
+            Georgia Tech (OMSCS). I build systems by day and find ways to break them
+            at night — shipping segfaults since the beginning.
+          </p>
+        </div>
+        <div class="about-graph">
+          <SkillGraph />
         </div>
       </div>
     </section>
@@ -335,6 +374,72 @@ const isBreakerExpanded = ref(false)
   }
 }
 
+/* --- About Section --- */
+.about-section {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.about-section.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.about-container {
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+
+.about-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.section-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0;
+  background: linear-gradient(90deg, var(--hero-grad-1), var(--hero-grad-3));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.about-tagline {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.about-bio {
+  font-size: 1.05rem;
+  line-height: 1.75;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.about-graph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
 /* --- Responsive --- */
 @media (max-width: 768px) {
   .hero-name {
@@ -355,6 +460,23 @@ const isBreakerExpanded = ref(false)
     opacity: 1 !important;
     transform: translateY(0) !important;
     font-size: 0.8rem;
+  }
+
+  .about-container {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .about-section {
+    padding: 3rem 1.5rem;
+  }
+
+  .section-title {
+    font-size: 2rem;
+  }
+
+  .about-graph {
+    min-height: 300px;
   }
 }
 </style>

@@ -11,9 +11,17 @@ let animId: number | null = null
 let clock: THREE.Clock
 let resizeObserver: ResizeObserver | null = null
 
-// --- Character groups ---
-let builderGroup: THREE.Group
-let gorillaGroup: THREE.Group
+// --- Character parts for proper limb animation ---
+interface CharParts {
+  group: THREE.Group
+  leftArm: THREE.Group
+  rightArm: THREE.Group
+  leftLeg: THREE.Group
+  rightLeg: THREE.Group
+}
+
+let builder: CharParts
+let gorilla: CharParts
 
 // --- City state ---
 interface Building {
@@ -31,6 +39,39 @@ const buildings: Building[] = []
 const GRID_SIZE = 8
 const SPACING = 3
 
+// --- Particles (sparks / debris) ---
+interface Particle {
+  mesh: THREE.Mesh
+  velocity: THREE.Vector3
+  life: number
+  maxLife: number
+}
+
+const particles: Particle[] = []
+const MAX_PARTICLES = 80
+
+// --- Shockwaves (expanding ground rings) ---
+interface Shockwave {
+  ring: THREE.Mesh
+  life: number
+  maxLife: number
+}
+
+const shockwaves: Shockwave[] = []
+
+// --- Ambient floating data motes ---
+interface DataMote {
+  mesh: THREE.Mesh
+  speed: number
+}
+
+const dataMotes: DataMote[] = []
+const MOTE_COUNT = 40
+
+// --- Camera shake ---
+let cameraShakeTimer = 0
+let cameraShakeIntensity = 0
+
 // --- Materials ---
 const neonCyan = new THREE.MeshBasicMaterial({ color: 0x00ffff })
 const neonMagenta = new THREE.MeshBasicMaterial({ color: 0xff00ff })
@@ -42,8 +83,21 @@ const edgeMagenta = new THREE.LineBasicMaterial({ color: 0xff00ff, transparent: 
 const builtColor = new THREE.Color(0x1a4a5a) // teal-tinted — "lit up"
 const darkColor = new THREE.Color(0x0a0e18)  // near-black — "broken/dark"
 
-// --- Build a low-poly blocky humanoid (builder) ---
-function createBuilder(): THREE.Group {
+// --- Add wireframe edges to all meshes in a group ---
+function addWireframes(group: THREE.Object3D, lineMat: THREE.LineBasicMaterial) {
+  group.traverse((child) => {
+    if (child instanceof THREE.Mesh) {
+      const wireGeo = new THREE.EdgesGeometry(child.geometry)
+      const wire = new THREE.LineSegments(wireGeo, lineMat.clone())
+      child.add(wire)
+      ;(child.material as THREE.MeshBasicMaterial).transparent = true
+      ;(child.material as THREE.MeshBasicMaterial).opacity = 0.3
+    }
+  })
+}
+
+// --- Build a low-poly blocky humanoid (builder) with limb pivots ---
+function createBuilder(): CharParts {
   const g = new THREE.Group()
 
   const body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.2, 0.5), neonCyan.clone())
@@ -59,37 +113,55 @@ function createBuilder(): THREE.Group {
   g.add(hat)
 
   const armGeo = new THREE.BoxGeometry(0.25, 0.8, 0.25)
+
+  // Left arm — pivot at shoulder
+  const leftArmPivot = new THREE.Group()
+  leftArmPivot.position.set(-0.65, 2.1, 0)
   const leftArm = new THREE.Mesh(armGeo, neonCyan.clone())
-  leftArm.position.set(-0.65, 1.6, 0)
-  g.add(leftArm)
+  leftArm.position.set(0, -0.4, 0)
+  leftArmPivot.add(leftArm)
+  g.add(leftArmPivot)
+
+  // Right arm — pivot at shoulder
+  const rightArmPivot = new THREE.Group()
+  rightArmPivot.position.set(0.65, 2.1, 0)
   const rightArm = new THREE.Mesh(armGeo, neonCyan.clone())
-  rightArm.position.set(0.65, 1.6, 0)
-  g.add(rightArm)
+  rightArm.position.set(0, -0.4, 0)
+  rightArmPivot.add(rightArm)
+  g.add(rightArmPivot)
 
   const legGeo = new THREE.BoxGeometry(0.3, 0.8, 0.3)
+
+  // Left leg — pivot at hip
+  const leftLegPivot = new THREE.Group()
+  leftLegPivot.position.set(-0.22, 1.0, 0)
   const leftLeg = new THREE.Mesh(legGeo, neonCyan.clone())
-  leftLeg.position.set(-0.22, 0.5, 0)
-  g.add(leftLeg)
+  leftLeg.position.set(0, -0.4, 0)
+  leftLegPivot.add(leftLeg)
+  g.add(leftLegPivot)
+
+  // Right leg — pivot at hip
+  const rightLegPivot = new THREE.Group()
+  rightLegPivot.position.set(0.22, 1.0, 0)
   const rightLeg = new THREE.Mesh(legGeo, neonCyan.clone())
-  rightLeg.position.set(0.22, 0.5, 0)
-  g.add(rightLeg)
+  rightLeg.position.set(0, -0.4, 0)
+  rightLegPivot.add(rightLeg)
+  g.add(rightLegPivot)
 
-  g.traverse((child) => {
-    if (child instanceof THREE.Mesh) {
-      const wireGeo = new THREE.EdgesGeometry(child.geometry)
-      const wire = new THREE.LineSegments(wireGeo, edgeMat.clone())
-      child.add(wire)
-      ;(child.material as THREE.MeshBasicMaterial).transparent = true
-      ;(child.material as THREE.MeshBasicMaterial).opacity = 0.3
-    }
-  })
-
+  addWireframes(g, edgeMat)
   g.scale.setScalar(0.8)
-  return g
+
+  return {
+    group: g,
+    leftArm: leftArmPivot,
+    rightArm: rightArmPivot,
+    leftLeg: leftLegPivot,
+    rightLeg: rightLegPivot,
+  }
 }
 
-// --- Build a low-poly blocky gorilla (breaker) ---
-function createGorilla(): THREE.Group {
+// --- Build a low-poly blocky gorilla (breaker) with limb pivots ---
+function createGorilla(): CharParts {
   const g = new THREE.Group()
 
   const body = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.3, 0.8), neonMagenta.clone())
@@ -105,41 +177,58 @@ function createGorilla(): THREE.Group {
   g.add(brow)
 
   const armGeo = new THREE.BoxGeometry(0.4, 1.4, 0.4)
-  const leftArm = new THREE.Mesh(armGeo, neonMagenta.clone())
-  leftArm.position.set(-1.05, 1.3, 0)
-  g.add(leftArm)
-  const rightArm = new THREE.Mesh(armGeo, neonMagenta.clone())
-  rightArm.position.set(1.05, 1.3, 0)
-  g.add(rightArm)
-
   const fistGeo = new THREE.BoxGeometry(0.45, 0.35, 0.45)
+
+  // Left arm — pivot at shoulder (arm + fist as children)
+  const leftArmPivot = new THREE.Group()
+  leftArmPivot.position.set(-1.05, 2.3, 0)
+  const leftArm = new THREE.Mesh(armGeo, neonMagenta.clone())
+  leftArm.position.set(0, -0.7, 0)
+  leftArmPivot.add(leftArm)
   const leftFist = new THREE.Mesh(fistGeo, neonMagenta.clone())
-  leftFist.position.set(-1.05, 0.45, 0)
-  g.add(leftFist)
+  leftFist.position.set(0, -1.2, 0)
+  leftArmPivot.add(leftFist)
+  g.add(leftArmPivot)
+
+  // Right arm — pivot at shoulder (arm + fist as children)
+  const rightArmPivot = new THREE.Group()
+  rightArmPivot.position.set(1.05, 2.3, 0)
+  const rightArm = new THREE.Mesh(armGeo, neonMagenta.clone())
+  rightArm.position.set(0, -0.7, 0)
+  rightArmPivot.add(rightArm)
   const rightFist = new THREE.Mesh(fistGeo, neonMagenta.clone())
-  rightFist.position.set(1.05, 0.45, 0)
-  g.add(rightFist)
+  rightFist.position.set(0, -1.2, 0)
+  rightArmPivot.add(rightFist)
+  g.add(rightArmPivot)
 
   const legGeo = new THREE.BoxGeometry(0.4, 0.6, 0.4)
+
+  // Left leg — pivot at hip
+  const leftLegPivot = new THREE.Group()
+  leftLegPivot.position.set(-0.35, 1.0, 0)
   const leftLeg = new THREE.Mesh(legGeo, neonMagenta.clone())
-  leftLeg.position.set(-0.35, 0.4, 0)
-  g.add(leftLeg)
+  leftLeg.position.set(0, -0.3, 0)
+  leftLegPivot.add(leftLeg)
+  g.add(leftLegPivot)
+
+  // Right leg — pivot at hip
+  const rightLegPivot = new THREE.Group()
+  rightLegPivot.position.set(0.35, 1.0, 0)
   const rightLeg = new THREE.Mesh(legGeo, neonMagenta.clone())
-  rightLeg.position.set(0.35, 0.4, 0)
-  g.add(rightLeg)
+  rightLeg.position.set(0, -0.3, 0)
+  rightLegPivot.add(rightLeg)
+  g.add(rightLegPivot)
 
-  g.traverse((child) => {
-    if (child instanceof THREE.Mesh) {
-      const wireGeo = new THREE.EdgesGeometry(child.geometry)
-      const wire = new THREE.LineSegments(wireGeo, edgeMagenta.clone())
-      child.add(wire)
-      ;(child.material as THREE.MeshBasicMaterial).transparent = true
-      ;(child.material as THREE.MeshBasicMaterial).opacity = 0.3
-    }
-  })
-
+  addWireframes(g, edgeMagenta)
   g.scale.setScalar(0.8)
-  return g
+
+  return {
+    group: g,
+    leftArm: leftArmPivot,
+    rightArm: rightArmPivot,
+    leftLeg: leftLegPivot,
+    rightLeg: rightLegPivot,
+  }
 }
 
 // --- Create a building at grid position ---
@@ -203,7 +292,6 @@ function setBuildingLit(b: Building, lit: boolean) {
   const mat = b.mainMesh.material as THREE.MeshStandardMaterial
   mat.color.copy(lit ? builtColor : darkColor)
 
-  // Find wire edges and set opacity
   const wire = b.mainMesh.children.find(c => c instanceof THREE.LineSegments) as THREE.LineSegments | undefined
   if (wire) {
     const wMat = wire.material as THREE.LineBasicMaterial
@@ -211,7 +299,6 @@ function setBuildingLit(b: Building, lit: boolean) {
     wMat.opacity = lit ? 0.6 : 0.15
   }
 
-  // Windows glow when lit
   b.mainMesh.children.forEach(c => {
     if (c instanceof THREE.Mesh && c !== b.mainMesh && c.geometry.type === 'PlaneGeometry') {
       const wm = c.material as THREE.MeshBasicMaterial
@@ -220,17 +307,145 @@ function setBuildingLit(b: Building, lit: boolean) {
   })
 }
 
+// --- Particle effects ---
+function spawnParticles(position: THREE.Vector3, color: number, count: number, spread: number) {
+  const actualCount = Math.min(count, MAX_PARTICLES - particles.length)
+  for (let i = 0; i < actualCount; i++) {
+    const size = 0.06 + Math.random() * 0.08
+    const geo = new THREE.BoxGeometry(size, size, size)
+    const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 1 })
+    const mesh = new THREE.Mesh(geo, mat)
+    mesh.position.copy(position)
+    mesh.position.x += (Math.random() - 0.5) * 0.5
+    mesh.position.z += (Math.random() - 0.5) * 0.5
+    scene.add(mesh)
+
+    const velocity = new THREE.Vector3(
+      (Math.random() - 0.5) * spread * 2,
+      Math.random() * spread * 3,
+      (Math.random() - 0.5) * spread * 2
+    )
+    particles.push({ mesh, velocity, life: 0, maxLife: 0.6 + Math.random() * 0.6 })
+  }
+}
+
+function updateParticles(dt: number) {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i]
+    p.life += dt
+    p.velocity.y -= 12 * dt // gravity
+    p.mesh.position.add(p.velocity.clone().multiplyScalar(dt))
+    p.mesh.rotation.x += dt * 3
+    p.mesh.rotation.z += dt * 2
+    const alpha = 1 - (p.life / p.maxLife)
+    ;(p.mesh.material as THREE.MeshBasicMaterial).opacity = alpha
+
+    if (p.life >= p.maxLife) {
+      scene.remove(p.mesh)
+      p.mesh.geometry.dispose()
+      ;(p.mesh.material as THREE.MeshBasicMaterial).dispose()
+      particles.splice(i, 1)
+    }
+  }
+}
+
+// --- Shockwave rings ---
+function spawnShockwave(position: THREE.Vector3, color: number) {
+  const geo = new THREE.RingGeometry(0.2, 0.5, 32)
+  const mat = new THREE.MeshBasicMaterial({
+    color,
+    transparent: true,
+    opacity: 0.7,
+    side: THREE.DoubleSide,
+  })
+  const ring = new THREE.Mesh(geo, mat)
+  ring.position.set(position.x, 0.05, position.z)
+  ring.rotation.x = -Math.PI / 2
+  scene.add(ring)
+  shockwaves.push({ ring, life: 0, maxLife: 0.8 })
+}
+
+function updateShockwaves(dt: number) {
+  for (let i = shockwaves.length - 1; i >= 0; i--) {
+    const sw = shockwaves[i]
+    sw.life += dt
+    const t = sw.life / sw.maxLife
+    const scale = 1 + t * 12
+    sw.ring.scale.set(scale, scale, 1)
+    ;(sw.ring.material as THREE.MeshBasicMaterial).opacity = 0.7 * (1 - t * t)
+
+    if (sw.life >= sw.maxLife) {
+      scene.remove(sw.ring)
+      sw.ring.geometry.dispose()
+      ;(sw.ring.material as THREE.MeshBasicMaterial).dispose()
+      shockwaves.splice(i, 1)
+    }
+  }
+}
+
+// --- Ambient floating data motes ---
+function initDataMotes() {
+  const range = GRID_SIZE * SPACING / 2
+  for (let i = 0; i < MOTE_COUNT; i++) {
+    const size = 0.03 + Math.random() * 0.04
+    const geo = new THREE.BoxGeometry(size, size, size)
+    const isCyan = Math.random() > 0.5
+    const mat = new THREE.MeshBasicMaterial({
+      color: isCyan ? 0x00ffff : 0xff00ff,
+      transparent: true,
+      opacity: 0.3 + Math.random() * 0.4,
+    })
+    const mesh = new THREE.Mesh(geo, mat)
+    mesh.position.set(
+      (Math.random() - 0.5) * range * 2,
+      Math.random() * 15,
+      (Math.random() - 0.5) * range * 2,
+    )
+    scene.add(mesh)
+    dataMotes.push({ mesh, speed: 0.3 + Math.random() * 0.5 })
+  }
+}
+
+function updateDataMotes(dt: number) {
+  const range = GRID_SIZE * SPACING / 2
+  for (const m of dataMotes) {
+    m.mesh.position.y += m.speed * dt
+    m.mesh.rotation.x += dt * 0.5
+    m.mesh.rotation.z += dt * 0.3
+
+    if (m.mesh.position.y > 15) {
+      m.mesh.position.y = -1
+      m.mesh.position.x = (Math.random() - 0.5) * range * 2
+      m.mesh.position.z = (Math.random() - 0.5) * range * 2
+    }
+  }
+}
+
+// --- Camera shake ---
+function triggerCameraShake(intensity: number) {
+  cameraShakeTimer = 0.4
+  cameraShakeIntensity = intensity
+}
+
 // --- Gorilla state machine ---
 type GorillaPhase = 'walking' | 'jumping' | 'landing' | 'idle'
 let gorillaPhase: GorillaPhase = 'idle'
 let gorillaTarget: Building | null = null
 let gorillaJumpTimer = 0
 const JUMP_DURATION = 0.6
-const JUMP_HEIGHT = 4
+const JUMP_HEIGHT = 5
 
 // --- Animation ---
 let builderWaitTimer = 0
 let gorillaWaitTimer = 2
+
+// Resets all limbs to resting pose
+function resetLimbs(char: CharParts) {
+  char.leftArm.rotation.x = 0
+  char.rightArm.rotation.x = 0
+  char.leftLeg.rotation.x = 0
+  char.rightLeg.rotation.x = 0
+}
 
 function updateScene(dt: number) {
   const time = clock.getElapsedTime()
@@ -238,10 +453,10 @@ function updateScene(dt: number) {
   // --- Animate Builder ---
   if (builderWaitTimer > 0) {
     builderWaitTimer -= dt
+    resetLimbs(builder)
   } else {
     const toBuild = buildings.filter(b => b.state === 'rubble' || b.state === 'building')
     if (toBuild.length === 0) {
-      // All standing — pick one to make rubble
       const candidates = buildings.filter(b => b.state === 'standing')
       if (candidates.length > 0) {
         const pick = candidates[Math.floor(Math.random() * candidates.length)]
@@ -260,99 +475,148 @@ function updateScene(dt: number) {
 
       const tx = (target.gridX - GRID_SIZE / 2) * SPACING - 1.5
       const tz = (target.gridZ - GRID_SIZE / 2) * SPACING
-      const dx = tx - builderGroup.position.x
-      const dz = tz - builderGroup.position.z
+      const dx = tx - builder.group.position.x
+      const dz = tz - builder.group.position.z
       const dist = Math.sqrt(dx * dx + dz * dz)
 
       if (dist > 0.3) {
+        // Walking — animate legs and arms
         const speed = 3
-        builderGroup.position.x += (dx / dist) * speed * dt
-        builderGroup.position.z += (dz / dist) * speed * dt
-        builderGroup.lookAt(new THREE.Vector3(tx, 0, tz))
-        builderGroup.position.y = Math.abs(Math.sin(time * 8)) * 0.15
+        builder.group.position.x += (dx / dist) * speed * dt
+        builder.group.position.z += (dz / dist) * speed * dt
+        builder.group.lookAt(new THREE.Vector3(tx, 0, tz))
+        builder.group.position.y = Math.abs(Math.sin(time * 8)) * 0.15
+
+        builder.leftLeg.rotation.x = Math.sin(time * 8) * 0.5
+        builder.rightLeg.rotation.x = Math.sin(time * 8 + Math.PI) * 0.5
+        builder.leftArm.rotation.x = Math.sin(time * 8 + Math.PI) * 0.35
+        builder.rightArm.rotation.x = Math.sin(time * 8) * 0.35
       } else {
+        // Building — hammer animation on right arm
         target.currentHeight = Math.min(target.currentHeight + dt * 1.5, target.targetHeight)
 
-        // Gradually light up the building as it's built
         const progress = target.currentHeight / target.targetHeight
         const mat = target.mainMesh.material as THREE.MeshStandardMaterial
         mat.color.lerpColors(darkColor, builtColor, progress)
+
+        builder.rightArm.rotation.x = Math.sin(time * 12) * 0.6
+        builder.leftArm.rotation.x = -0.2 // holding steady
+        builder.leftLeg.rotation.x = 0
+        builder.rightLeg.rotation.x = 0
+        builder.group.position.y = 0
 
         if (target.currentHeight >= target.targetHeight) {
           target.state = 'standing'
           target.stateTimer = 0
           setBuildingLit(target, true)
           builderWaitTimer = 0.5
+
+          // Sparks on completion
+          const buildPos = new THREE.Vector3(
+            (target.gridX - GRID_SIZE / 2) * SPACING,
+            target.currentHeight * 0.6,
+            (target.gridZ - GRID_SIZE / 2) * SPACING,
+          )
+          spawnParticles(buildPos, 0x00ffff, 10, 1.2)
         }
-        builderGroup.children[4].rotation.x = Math.sin(time * 12) * 0.5
       }
+    } else {
+      resetLimbs(builder)
     }
   }
 
   // --- Animate Gorilla (jump on buildings) ---
   if (gorillaWaitTimer > 0) {
     gorillaWaitTimer -= dt
-    gorillaGroup.position.y = 0
+    gorilla.group.position.y = 0
+
+    // Idle chest pound
+    gorilla.leftArm.rotation.x = Math.abs(Math.sin(time * 6)) * 0.5
+    gorilla.rightArm.rotation.x = Math.abs(Math.sin(time * 6 + Math.PI * 0.5)) * 0.5
+    gorilla.leftLeg.rotation.x = 0
+    gorilla.rightLeg.rotation.x = 0
   } else if (gorillaPhase === 'idle') {
-    // Find a standing building to target
     const candidates = buildings.filter(b => b.state === 'standing' && b.stateTimer > 2.5)
     if (candidates.length > 0) {
       gorillaTarget = candidates[Math.floor(Math.random() * candidates.length)]
       gorillaPhase = 'walking'
     } else {
-      // Idle animation — pound chest
-      gorillaGroup.position.y = 0
-      gorillaGroup.children[3].rotation.x = Math.sin(time * 6) * 0.3
-      gorillaGroup.children[4].rotation.x = Math.sin(time * 6 + Math.PI) * 0.3
+      // Idle — chest pound
+      gorilla.group.position.y = 0
+      gorilla.leftArm.rotation.x = Math.abs(Math.sin(time * 6)) * 0.5
+      gorilla.rightArm.rotation.x = Math.abs(Math.sin(time * 6 + Math.PI * 0.5)) * 0.5
+      gorilla.leftLeg.rotation.x = 0
+      gorilla.rightLeg.rotation.x = 0
     }
   } else if (gorillaPhase === 'walking' && gorillaTarget) {
     const tx = (gorillaTarget.gridX - GRID_SIZE / 2) * SPACING
     const tz = (gorillaTarget.gridZ - GRID_SIZE / 2) * SPACING
-    const dx = tx - gorillaGroup.position.x
-    const dz = tz - gorillaGroup.position.z
+    const dx = tx - gorilla.group.position.x
+    const dz = tz - gorilla.group.position.z
     const dist = Math.sqrt(dx * dx + dz * dz)
 
     if (dist > 0.5) {
+      // Heavy walk — wide arm swing, body sway
       const speed = 2.5
-      gorillaGroup.position.x += (dx / dist) * speed * dt
-      gorillaGroup.position.z += (dz / dist) * speed * dt
-      gorillaGroup.lookAt(new THREE.Vector3(tx, 0, tz))
-      gorillaGroup.position.y = Math.abs(Math.sin(time * 5)) * 0.2
-      gorillaGroup.rotation.z = Math.sin(time * 4) * 0.05
+      gorilla.group.position.x += (dx / dist) * speed * dt
+      gorilla.group.position.z += (dz / dist) * speed * dt
+      gorilla.group.lookAt(new THREE.Vector3(tx, 0, tz))
+      gorilla.group.position.y = Math.abs(Math.sin(time * 5)) * 0.2
+      gorilla.group.rotation.z = Math.sin(time * 4) * 0.05
+
+      gorilla.leftLeg.rotation.x = Math.sin(time * 5) * 0.35
+      gorilla.rightLeg.rotation.x = Math.sin(time * 5 + Math.PI) * 0.35
+      gorilla.leftArm.rotation.x = Math.sin(time * 5 + Math.PI) * 0.5
+      gorilla.rightArm.rotation.x = Math.sin(time * 5) * 0.5
     } else {
-      // Arrived — start jump
+      // Arrived at target — begin jump
       gorillaPhase = 'jumping'
       gorillaJumpTimer = 0
-      gorillaGroup.rotation.z = 0
+      gorilla.group.rotation.z = 0
     }
   } else if (gorillaPhase === 'jumping' && gorillaTarget) {
     gorillaJumpTimer += dt
     const t = Math.min(gorillaJumpTimer / JUMP_DURATION, 1)
 
-    // Parabolic arc: up then down
+    // Parabolic arc
     const jumpY = JUMP_HEIGHT * 4 * t * (1 - t)
     const landingY = gorillaTarget.currentHeight * 0.8
-    gorillaGroup.position.y = jumpY + (t > 0.5 ? (t - 0.5) * 2 * landingY : 0)
+    gorilla.group.position.y = jumpY + (t > 0.5 ? (t - 0.5) * 2 * landingY : 0)
 
-    // Arms up during jump
-    gorillaGroup.children[3].rotation.x = -1.5
-    gorillaGroup.children[4].rotation.x = -1.5
+    // Arms up, legs tucked during jump
+    gorilla.leftArm.rotation.x = -2.0
+    gorilla.rightArm.rotation.x = -2.0
+    gorilla.leftLeg.rotation.x = -0.5
+    gorilla.rightLeg.rotation.x = -0.5
 
     if (t >= 1) {
       gorillaPhase = 'landing'
       gorillaJumpTimer = 0
     }
   } else if (gorillaPhase === 'landing' && gorillaTarget) {
-    // Slam! Building goes dark
+    // SLAM! Building goes dark
     gorillaTarget.state = 'rubble'
     gorillaTarget.currentHeight = Math.max(gorillaTarget.targetHeight * 0.3, 1)
     setBuildingLit(gorillaTarget, false)
 
     // Arms slam down
-    gorillaGroup.children[3].rotation.x = 0.8
-    gorillaGroup.children[4].rotation.x = 0.8
+    gorilla.leftArm.rotation.x = 0.8
+    gorilla.rightArm.rotation.x = 0.8
+    gorilla.leftLeg.rotation.x = 0
+    gorilla.rightLeg.rotation.x = 0
 
-    gorillaGroup.position.y = gorillaTarget.currentHeight * 0.5
+    gorilla.group.position.y = gorillaTarget.currentHeight * 0.5
+
+    // Impact effects
+    const impactPos = new THREE.Vector3(
+      gorilla.group.position.x,
+      0,
+      gorilla.group.position.z,
+    )
+    spawnParticles(impactPos, 0xff00ff, 12, 1.5)
+    spawnShockwave(impactPos, 0xff00ff)
+    triggerCameraShake(0.3)
+
     gorillaTarget = null
     gorillaPhase = 'idle'
     gorillaWaitTimer = 2
@@ -367,12 +631,26 @@ function updateScene(dt: number) {
     b.mainMesh.position.y = b.mainMesh.scale.y * 0.5
   }
 
-  // Slow camera orbit
+  // --- Update effects ---
+  updateParticles(dt)
+  updateShockwaves(dt)
+  updateDataMotes(dt)
+
+  // --- Camera: slow orbit + shake ---
   const camAngle = time * 0.08
   const camRadius = 20
   camera.position.x = Math.cos(camAngle) * camRadius
   camera.position.z = Math.sin(camAngle) * camRadius
   camera.position.y = 10 + Math.sin(time * 0.15) * 2
+
+  if (cameraShakeTimer > 0) {
+    cameraShakeTimer -= dt
+    const shakeFactor = cameraShakeIntensity * (cameraShakeTimer / 0.4)
+    camera.position.x += (Math.random() - 0.5) * shakeFactor
+    camera.position.y += (Math.random() - 0.5) * shakeFactor * 0.5
+    camera.position.z += (Math.random() - 0.5) * shakeFactor
+  }
+
   camera.lookAt(0, 2, 0)
 }
 
@@ -435,13 +713,16 @@ function initScene() {
   }
 
   // Characters
-  builderGroup = createBuilder()
-  builderGroup.position.set(-5, 0, 0)
-  scene.add(builderGroup)
+  builder = createBuilder()
+  builder.group.position.set(-5, 0, 0)
+  scene.add(builder.group)
 
-  gorillaGroup = createGorilla()
-  gorillaGroup.position.set(5, 0, 0)
-  scene.add(gorillaGroup)
+  gorilla = createGorilla()
+  gorilla.group.position.set(5, 0, 0)
+  scene.add(gorilla.group)
+
+  // Ambient data motes
+  initDataMotes()
 }
 
 function animate() {
@@ -483,6 +764,31 @@ onUnmounted(() => {
     resizeObserver.disconnect()
     resizeObserver = null
   }
+
+  // Clean up particles
+  for (const p of particles) {
+    scene.remove(p.mesh)
+    p.mesh.geometry.dispose()
+    ;(p.mesh.material as THREE.MeshBasicMaterial).dispose()
+  }
+  particles.length = 0
+
+  // Clean up shockwaves
+  for (const sw of shockwaves) {
+    scene.remove(sw.ring)
+    sw.ring.geometry.dispose()
+    ;(sw.ring.material as THREE.MeshBasicMaterial).dispose()
+  }
+  shockwaves.length = 0
+
+  // Clean up data motes
+  for (const m of dataMotes) {
+    scene.remove(m.mesh)
+    m.mesh.geometry.dispose()
+    ;(m.mesh.material as THREE.MeshBasicMaterial).dispose()
+  }
+  dataMotes.length = 0
+
   if (renderer) {
     renderer.dispose()
     const container = containerRef.value
