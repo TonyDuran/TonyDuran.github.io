@@ -2,24 +2,26 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import CyberCityScene from '@/components/CyberCityScene.vue'
+import KnightsTour from '@/components/KnightsTour.vue'
 
 const router = useRouter()
 const isFullscreen = ref(false)
+const knightFullscreen = ref(false)
 </script>
 
 <template>
-  <div class="experiments-page" :class="{ 'fs-mode': isFullscreen }">
-    <header v-if="!isFullscreen" class="experiments-header">
+  <div class="experiments-page" :class="{ 'fs-mode': isFullscreen || knightFullscreen }">
+    <header v-if="!isFullscreen && !knightFullscreen" class="experiments-header">
       <button class="back-btn" @click="router.push('/')">
         <span class="back-arrow">&larr;</span> Home
       </button>
-      <h1 class="page-title">Experiments</h1>
+      <h1 class="page-title">AI Experiments</h1>
     </header>
 
-    <section class="experiment-card" :class="{ 'fs-card': isFullscreen }">
+    <section v-show="!knightFullscreen" class="experiment-card" :class="{ 'fs-card': isFullscreen }">
       <div v-if="!isFullscreen" class="card-header">
         <div>
-          <h2 class="experiment-title">Builder vs Breaker (AI Generated with Opus 4.6)</h2>
+          <h2 class="experiment-title">Builder vs Breaker (Built with Opus 4.6)</h2>
           <p class="experiment-desc">A cyberpunk cityscape where creation and destruction happen in real time. This was just a challenge to see what Claude code can do.</p>
         </div>
         <button class="expand-btn" @click="isFullscreen = true">Fullscreen</button>
@@ -30,6 +32,24 @@ const isFullscreen = ref(false)
       </div>
 
       <button v-if="isFullscreen" class="exit-fs-btn" @click="isFullscreen = false">
+        &times; Exit
+      </button>
+    </section>
+
+    <section v-show="!isFullscreen" class="experiment-card" :class="{ 'fs-card': knightFullscreen }">
+      <div v-if="!knightFullscreen" class="card-header">
+        <div>
+          <h2 class="experiment-title">Knight's Tour (Built with Opus 4.6)</h2>
+          <p class="experiment-desc">Click any square to place a knight, then watch it attempt to visit every square on the board using Warnsdorff's heuristic.</p>
+        </div>
+        <button class="expand-btn" @click="knightFullscreen = true">Fullscreen</button>
+      </div>
+
+      <div class="scene-container" :class="{ 'fs-scene': knightFullscreen }">
+        <KnightsTour />
+      </div>
+
+      <button v-if="knightFullscreen" class="exit-fs-btn" @click="knightFullscreen = false">
         &times; Exit
       </button>
     </section>
@@ -95,6 +115,10 @@ const isFullscreen = ref(false)
   border-radius: 8px;
   padding: 1.5rem;
   max-width: 1000px;
+}
+
+.experiment-card + .experiment-card {
+  margin-top: 2rem;
 }
 
 .experiment-card.fs-card {

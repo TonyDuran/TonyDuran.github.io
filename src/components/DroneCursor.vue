@@ -23,7 +23,7 @@ const innerStyles = computed(() =>
 
 // --- Outer orbit: nav links ---
 const navLinks = [
-  { label: 'Experiments', route: '/experiments' },
+  { label: 'AI Experiments', route: '/experiments' },
 ]
 
 const outerStyles = computed(() =>
